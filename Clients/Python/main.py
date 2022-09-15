@@ -321,7 +321,7 @@ class GameState:
 
         #Setting Minimum & Maximum Of Wallet & Also Conditions Of Upgrade For Each Round
         remaining_rounds = self.rounds - self.current_round
-        max_value_in_wallet = 8
+        max_value_in_wallet = 9
         min_value_in_wallet = 0
         max_value_in_wallet = min(max_value_in_wallet,remaining_rounds//2.5)
         min_value_in_wallet = max(min_value_in_wallet,max_value_in_wallet-5)
