@@ -26,6 +26,7 @@ class GameState:
         self.last_path = []
         self.watched = []
         self.target = (-1,-1)
+        self.mins_suspects = []
 
     def set_info(self) -> None:
         self.location = tuple(map(int, input().split()))  # (row, column)
@@ -48,17 +49,14 @@ class GameState:
 
         for tile in self.map.grid:
             if self.target == tile.address and self.last_action == -1 and tile.type == MapType.FOG and self.distance(self.location,tile.address) == 1:
+                if len(self.mins_suspects) and tile.address in self.mins_suspects:
+                    tile.type = MapType.WALL
+                    if len(self.map.fogs) and tile.address in self.map.fogs:    
+                        self.map.fogs.remove(tile.address)
+            else:
+                self.mins_suspects.append(tile.address)
+            if len(self.map.mines) and tile.address in self.map.mines and tile.type == MapType.FOG:     
                 tile.type = MapType.WALL
-                self.log('Debug (msg)', 'fogs change to wall')
-                self.log('Debug (tile.address)', str(tile.address))
-                self.log('Debug (tile.type)', str(tile.type))
-                self.log('Debug (target)', str(self.target))
-                if len(self.map.fogs) and tile.address in self.map.fogs:    
-                    self.map.fogs.remove(tile.address)
-                    self.log('Debug', 'remove tile from fogs')
-            elif len(self.map.mines) and tile.address in self.map.mines and tile.type == MapType.FOG:     
-                tile.type = MapType.WALL
-                self.log('Debug', 'type fogs change to wall - (address in mines)')
             self.map.set_tile_info(tile)
         self.map.set_adjacency_matrix(self.location)
 
