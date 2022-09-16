@@ -271,7 +271,7 @@ class GameState:
                     self.watched.append((i,j))
 
     def attack(self):
-        attack_number = 4
+        attack_number = 3
         total_value_of_attack = 0
         for agent in self.map.enemies:
             agent_id = self.map.data[agent[0]][agent[1]]
@@ -348,7 +348,7 @@ class GameState:
 
         #Setting Minimum & Maximum Of Wallet & Also Conditions Of Upgrade For Each Round
         remaining_rounds = self.rounds - self.current_round
-        max_value_in_wallet = 7
+        max_value_in_wallet = 6
         min_value_in_wallet = 0
         max_value_in_wallet = min(max_value_in_wallet,remaining_rounds//2.5)
         min_value_in_wallet = max(min_value_in_wallet,max_value_in_wallet-5)
