@@ -25,6 +25,7 @@ class GameState:
         self.attack_values = [0,0,0,0]
         self.last_path = []
         self.watched = []
+        self.target = (-1,-1)
 
     def set_info(self) -> None:
         self.location = tuple(map(int, input().split()))  # (row, column)
@@ -33,8 +34,7 @@ class GameState:
         for tile in self.map.grid:
             tile.type, tile.data, *tile.address = map(int, input().split())
             tile.type = MapType(tile.type)
-            self.map.set_tile_info(tile)
-        self.map.set_adjacency_matrix(self.location)
+            tile.address = tuple(tile.address)
         self.agent_id = int(input())  # player1: 0,1 --- player2: 2,3
         self.current_round = int(input())  # 1 indexed
         self.attack_ratio = float(input())
@@ -46,6 +46,22 @@ class GameState:
         self.last_action = int(input())  # -1 if unsuccessful
         self.team = [0, 1] if self.agent_id in [0, 1] else [2, 3]
 
+        for tile in self.map.grid:
+            if self.target == tile.address and self.last_action == -1 and tile.type == MapType.FOG and self.distance(self.location,tile.address) == 1:
+                tile.type = MapType.WALL
+                self.log('Debug (msg)', 'fogs change to wall')
+                self.log('Debug (tile.address)', str(tile.address))
+                self.log('Debug (tile.type)', str(tile.type))
+                self.log('Debug (target)', str(self.target))
+                if len(self.map.fogs) and tile.address in self.map.fogs:    
+                    self.map.fogs.remove(tile.address)
+                    self.log('Debug', 'remove tile from fogs')
+            elif len(self.map.mines) and tile.address in self.map.mines and tile.type == MapType.FOG:     
+                tile.type = MapType.WALL
+                self.log('Debug', 'type fogs change to wall - (address in mines)')
+            self.map.set_tile_info(tile)
+        self.map.set_adjacency_matrix(self.location)
+
     def debug(self) -> None:
         self.debug_log += f'{60 * "-"}\n'
 
@@ -53,7 +69,7 @@ class GameState:
         self.debug_log += f'{title}: {text}\n'
 
     def debug_file(self) -> None:
-        fileName = 'Clients/logs/'
+        fileName = '../logs/'
         makedirs(fileName, exist_ok=True)
         fileName += f'AGENT{self.agent_id}.log'
         with open(fileName, 'w') as f:
@@ -66,10 +82,18 @@ class GameState:
 
         self.log(title='Target', text=str(target))
 
-        if self.location[0] < target[0] and (self.location[0]+1, self.location[1]) in self.map.adjmatrix[self.location]:    return Action.MOVE_DOWN
-        if self.location[0] > target[0] and (self.location[0]-1, self.location[1]) in self.map.adjmatrix[self.location]:    return Action.MOVE_UP
-        if self.location[1] > target[1] and (self.location[0], self.location[1]-1) in self.map.adjmatrix[self.location]:    return Action.MOVE_LEFT
-        if self.location[1] < target[1] and (self.location[0], self.location[1]+1) in self.map.adjmatrix[self.location]:    return Action.MOVE_RIGHT
+        if self.location[0] < target[0] and (self.location[0]+1, self.location[1]) in self.map.adjmatrix[self.location]:    
+            self.target = (self.location[0]+1, self.location[1])
+            return Action.MOVE_DOWN
+        if self.location[0] > target[0] and (self.location[0]-1, self.location[1]) in self.map.adjmatrix[self.location]:    
+            self.target = (self.location[0]-1, self.location[1])
+            return Action.MOVE_UP
+        if self.location[1] > target[1] and (self.location[0], self.location[1]-1) in self.map.adjmatrix[self.location]:    
+            self.target = (self.location[0], self.location[1]-1)
+            return Action.MOVE_LEFT
+        if self.location[1] < target[1] and (self.location[0], self.location[1]+1) in self.map.adjmatrix[self.location]:    
+            self.target = (self.location[0], self.location[1]+1)
+            return Action.MOVE_RIGHT
 
         self.log(title='Move', text='Stay')
 
@@ -308,9 +332,12 @@ class GameState:
         self.log('round', f'{str(self.current_round)}/{str(self.rounds)}')
         self.log('location', str(self.location))
         self.log('Map', str(self.map))
-        self.log('wallet', str(self.wallet))
-        self.log('adjmatrix', str(self.map.adjmatrix[self.location]))
-        self.log('worthy', self.select_worthy())
+        # self.log('wallet', str(self.wallet))
+        # self.log('adjmatrix', str(self.map.adjmatrix[self.location]))
+        # self.log('worthy', self.select_worthy())
+        self.log('Last Action', str(self.last_action))
+        self.log('mins', str(self.map.mines))
+        self.log('fogs', str(self.map.fogs))
 
         # Guidance
         '''go to treasurys --> return self.move(self.go_treasury())'''
@@ -325,8 +352,8 @@ class GameState:
         min_value_in_wallet = 0
         max_value_in_wallet = min(max_value_in_wallet,remaining_rounds//2.5)
         min_value_in_wallet = max(min_value_in_wallet,max_value_in_wallet-5)
-        self.log("Min Val",min_value_in_wallet)
-        self.log("Max Val",max_value_in_wallet)
+        # self.log("Min Val",min_value_in_wallet)
+        # self.log("Max Val",max_value_in_wallet)
         
         atk_upg_condition = remaining_rounds>=30 and self.atk_upgrade_cost<=4 and self.wallet>= self.atk_upgrade_cost and self.atklvl<4
         def_upg_condition = remaining_rounds>=40 and self.def_upgrade_cost<=4 and self.wallet>= self.def_upgrade_cost and self.deflvl<3
