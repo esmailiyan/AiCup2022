@@ -53,8 +53,8 @@ class GameState:
                     tile.type = MapType.WALL
                     if len(self.map.fogs) and tile.address in self.map.fogs:    
                         self.map.fogs.remove(tile.address)
-            else:
-                self.mins_suspects.append(tile.address)
+                else:
+                    self.mins_suspects.append(tile.address)
             if len(self.map.mines) and tile.address in self.map.mines and tile.type == MapType.FOG:     
                 tile.type = MapType.WALL
             self.map.set_tile_info(tile)
@@ -347,8 +347,8 @@ class GameState:
         #Setting Minimum & Maximum Of Wallet & Also Conditions Of Upgrade For Each Round
         remaining_rounds = self.rounds - self.current_round
         max_value_in_wallet = 6
-        min_value_in_wallet = 0
-        max_value_in_wallet = min(max_value_in_wallet,remaining_rounds//2.5)
+        min_value_in_wallet = 1
+        max_value_in_wallet = min(max_value_in_wallet,remaining_rounds//5)
         min_value_in_wallet = max(min_value_in_wallet,max_value_in_wallet-5)
         # self.log("Min Val",min_value_in_wallet)
         # self.log("Max Val",max_value_in_wallet)
