@@ -222,6 +222,9 @@ def get_brief_report(target:str) -> tuple[str,str]:
 def main() -> None:
     clean()
     run_server_loop()
+    with open(ANALYZE_LOG_PATH, 'r') as file:
+        lines = file.readlines()
+        print('\nResult:\n' + '   '.join(lines[-4:]))
     print("\nServer run iteration is over, check the log file at : \""+ANALYZE_LOG_PATH+"\"")
 
 
