@@ -27,15 +27,19 @@ class GameState:
         self.watched = []
         self.target = (-1,-1)
         self.mins_suspects = []
+        self.max_value_in_wallet = 6
+        self.min_value_in_wallet = 1
 
     def set_info(self) -> None:
         self.location = tuple(map(int, input().split()))  # (row, column)
         self.last_path.append(self.location)
         self.map.set_default_info()
+
         for tile in self.map.grid:
             tile.type, tile.data, *tile.address = map(int, input().split())
             tile.type = MapType(tile.type)
             tile.address = tuple(tile.address)
+            
         self.agent_id = int(input())  # player1: 0,1 --- player2: 2,3
         self.current_round = int(input())  # 1 indexed
         self.attack_ratio = float(input())
@@ -271,9 +275,13 @@ class GameState:
     def attack(self):
         attack_number = 3
         total_value_of_attack = 0
+        global enemy_present
+        enemy_present = False
         for agent in self.map.enemies:
             agent_id = self.map.data[agent[0]][agent[1]]
-            if  agent_id not in self.team and self.distance(self.location,agent)<=self.ranged_attack_radius:  total_value_of_attack+=self.attack_values[agent_id]
+            if  agent_id not in self.team and self.distance(self.location,agent)<=self.ranged_attack_radius:  
+                total_value_of_attack+=self.attack_values[agent_id]
+                enemy_present=True
         if total_value_of_attack>= attack_number:   return Action.RANGED_ATTACK
 
         for agent in self.map.enemies:
@@ -309,6 +317,31 @@ class GameState:
                             if max_row == agent[0]:
                                 return Action.LINEAR_ATTACK_DOWN
                             return Action.LINEAR_ATTACK_UP
+            elif agent_id not in self.team and (agent[0]==self.location[0] or agent[1]==self.location[1]) and self.distance(self.location,agent)<=self.linear_attack_range:
+                    in_same_row = agent[0]==self.location[0]
+                    in_same_column = agent[1]==self.location[1]
+                    no_wall_in_way = True
+                    if in_same_row:
+                        min_cloumn = min(agent[1],self.location[1])
+                        max_cloumn = max(agent[1],self.location[1])
+                        for i in range(min_cloumn+1,max_cloumn):
+                            if (agent[0],i) in self.map.mines:
+                                no_wall_in_way=False
+                                break
+                        if no_wall_in_way:
+                            enemy_present=True
+                    if in_same_column:
+                        min_row = min(agent[0],self.location[0])
+                        max_row = max(agent[0],self.location[0])
+                        for i in range(min_row+1,max_row):
+                            if (i,agent[1]) in self.map.mines:
+                                no_wall_in_way=False
+                                break
+                        if no_wall_in_way:
+                            enemy_present=True
+        if enemy_present and self.wallet>=self.max_value_in_wallet and self.def_upg_condition:
+            return Action.UPGRADE_DEFENCE
+
         return -1
 
     def get_action(self) -> Action:
@@ -346,23 +379,21 @@ class GameState:
 
         #Setting Minimum & Maximum Of Wallet & Also Conditions Of Upgrade For Each Round
         remaining_rounds = self.rounds - self.current_round
-        max_value_in_wallet = 6
-        min_value_in_wallet = 1
-        max_value_in_wallet = min(max_value_in_wallet,remaining_rounds//5)
-        min_value_in_wallet = max(min_value_in_wallet,max_value_in_wallet-5)
+        max_value_in_wallet = min(self.max_value_in_wallet,remaining_rounds//5)
+        min_value_in_wallet = max(self.min_value_in_wallet,max_value_in_wallet-5)
         # self.log("Min Val",min_value_in_wallet)
         # self.log("Max Val",max_value_in_wallet)
         
-        atk_upg_condition = remaining_rounds>=30 and self.atk_upgrade_cost<=4 and self.wallet>= self.atk_upgrade_cost and self.atklvl<4
-        def_upg_condition = remaining_rounds>=40 and self.def_upgrade_cost<=4 and self.wallet>= self.def_upgrade_cost and self.deflvl<3
+        self.atk_upg_condition = remaining_rounds>=30 and self.atk_upgrade_cost<=4 and self.wallet>= self.atk_upgrade_cost and self.atklvl<4
+        self.def_upg_condition = remaining_rounds>=40 and self.def_upgrade_cost<=4 and self.wallet>= self.def_upgrade_cost and self.deflvl<3
         treasury_dist_condition = self.distance(self.map.treasury[0],self.location)>=5 if len(self.map.treasury) else True
        
         # Algorithm
         if self.attack()!=-1: return self.attack()
 
         if self.wallet >= max_value_in_wallet and max_value_in_wallet!=0:
-            if atk_upg_condition and treasury_dist_condition:   return Action.UPGRADE_ATTACK
-            if def_upg_condition and treasury_dist_condition: return Action.UPGRADE_DEFENCE
+            if self.atk_upg_condition and treasury_dist_condition:   return Action.UPGRADE_ATTACK
+            if self.def_upg_condition and treasury_dist_condition: return Action.UPGRADE_DEFENCE
             if len(self.map.treasury):                                  return self.move(self.go_treasury())
             elif self.move(self.go_worthy(self.select_worthy())):       return self.move(self.go_worthy(self.select_worthy()))
 
