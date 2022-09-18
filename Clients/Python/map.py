@@ -37,25 +37,25 @@ class Map:
 
     def set_tile_info(self, tile) -> None:
         if tile.type == MapType.EMPTY:
-            self.empties.append(tuple(tile.address))
+            self.empties.append(tile.address)
         elif tile.type == MapType.AGENT:
-            self.enemies.append(tuple(tile.address))
+            self.enemies.append(tile.address)
             self.data[tile.address[0]][tile.address[1]] = tile.data
         elif tile.type == MapType.GOLD:
-            self.golds.append(tuple(tile.address))
+            self.golds.append(tile.address)
             self.data[tile.address[0]][tile.address[1]] = tile.data
         elif tile.type == MapType.TREASURY:
-            if tuple(tile.address) not in self.treasury:
-                self.treasury.append(tuple(tile.address))
+            if tile.address not in self.treasury:
+                self.treasury.append(tile.address)
         elif tile.type == MapType.WALL:
-            if tuple(tile.address) not in self.mines:
-                self.mines.append(tuple(tile.address))
+            if tile.address not in self.mines:
+                self.mines.append(tile.address)
         elif tile.type == MapType.FOG:
-            if tuple(tile.address) not in self.fogs:
-                self.fogs.append(tuple(tile.address))
+            if tile.address not in self.fogs:
+                self.fogs.append(tile.address)
 
         if tile.type in [MapType.EMPTY,MapType.GOLD,MapType.TREASURY,MapType.FOG]:
-            self.available_tiles.append(tuple(tile.address))
+            self.available_tiles.append(tile.address)
 
     def set_adjacency_matrix(self, location) -> None:
         self.available_tiles.append(location)

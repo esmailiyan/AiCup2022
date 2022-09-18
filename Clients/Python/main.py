@@ -392,23 +392,20 @@ class GameState:
         if self.attack()!=-1: return self.attack()
 
         if self.wallet >= max_value_in_wallet and max_value_in_wallet!=0:
-            if self.atk_upg_condition and treasury_dist_condition:   return Action.UPGRADE_ATTACK
-            if self.def_upg_condition and treasury_dist_condition: return Action.UPGRADE_DEFENCE
+            if self.atk_upg_condition and treasury_dist_condition:      return Action.UPGRADE_ATTACK
+            if self.def_upg_condition and treasury_dist_condition:      return Action.UPGRADE_DEFENCE
             if len(self.map.treasury):                                  return self.move(self.go_treasury())
-            elif self.move(self.go_worthy(self.select_worthy())):       return self.move(self.go_worthy(self.select_worthy()))
+            else:                                                       return self.move(self.go_worthy(self.select_worthy()))
 
         elif self.wallet >= min_value_in_wallet:
-            if len(self.map.golds):                                     return self.move(self.get_golds())
-            elif len(self.map.treasury):                                return self.move(self.go_treasury())
-            # elif len(self.map.fogs):                                    return self.move(self.map.fogs[0])
-            elif self.move(self.go_worthy(self.select_worthy())):       return self.move(self.go_worthy(self.select_worthy()))
+            if len(self.map.golds):                 return self.move(self.get_golds())
+            elif len(self.map.treasury):            return self.move(self.go_treasury())
+            else:                                   return self.move(self.go_worthy(self.select_worthy()))
 
         else:
-            if len(self.map.golds):                                     return self.move(self.get_golds())
-            # elif len(self.map.fogs):                                    return self.move(self.map.fogs[0])
-            elif self.move(self.go_worthy(self.select_worthy())):       return self.move(self.go_worthy(self.select_worthy()))
+            if len(self.map.golds):                 return self.move(self.get_golds())
+            else:                                   return self.move(self.go_worthy(self.select_worthy()))
 
-        # self.log("Action","No Action Found! Range Attack..")
         return Action.RANGED_ATTACK
 
 
