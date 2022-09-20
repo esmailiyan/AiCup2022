@@ -84,18 +84,10 @@ class GameState:
 
         self.log(title='Target', text=str(target))
 
-        if self.location[0] < target[0] and (self.location[0]+1, self.location[1]) in self.map.adjmatrix[self.location]:    
-            self.target = (self.location[0]+1, self.location[1])
-            return Action.MOVE_DOWN
-        if self.location[0] > target[0] and (self.location[0]-1, self.location[1]) in self.map.adjmatrix[self.location]:    
-            self.target = (self.location[0]-1, self.location[1])
-            return Action.MOVE_UP
-        if self.location[1] > target[1] and (self.location[0], self.location[1]-1) in self.map.adjmatrix[self.location]:    
-            self.target = (self.location[0], self.location[1]-1)
-            return Action.MOVE_LEFT
-        if self.location[1] < target[1] and (self.location[0], self.location[1]+1) in self.map.adjmatrix[self.location]:    
-            self.target = (self.location[0], self.location[1]+1)
-            return Action.MOVE_RIGHT
+        if self.location[0] < target[0] and (self.location[0]+1, self.location[1]) in self.map.adjmatrix[self.location]:    self.target = (self.location[0]+1, self.location[1]); return Action.MOVE_DOWN
+        if self.location[0] > target[0] and (self.location[0]-1, self.location[1]) in self.map.adjmatrix[self.location]:    self.target = (self.location[0]-1, self.location[1]); return Action.MOVE_UP
+        if self.location[1] > target[1] and (self.location[0], self.location[1]-1) in self.map.adjmatrix[self.location]:    self.target = (self.location[0], self.location[1]-1); return Action.MOVE_LEFT
+        if self.location[1] < target[1] and (self.location[0], self.location[1]+1) in self.map.adjmatrix[self.location]:    self.target = (self.location[0], self.location[1]+1); return Action.MOVE_RIGHT
 
         self.log(title='Move', text='Stay')
 
@@ -258,10 +250,6 @@ class GameState:
         
         # Set target
         nodes.sort(key=lambda node: [merit[node[0]][node[1]], -dist[node[0]][node[1]], -self.last_path.count(node)], reverse=True)
-        
-        # Logs
-        # self.log('merit', merit[nodes[0][0]][nodes[0][1]])
-        # self.log('dist', dist[nodes[0][0]][nodes[0][1]])
 
         # Return Answer
         return nodes[0]
@@ -339,8 +327,12 @@ class GameState:
                                 break
                         if no_wall_in_way:
                             enemy_present=True
-        if enemy_present and self.wallet>=self.max_value_in_wallet and self.def_upg_condition:
+        if enemy_present and self.wallet>=4 and self.def_upg_condition:
             return Action.UPGRADE_DEFENCE
+        elif enemy_present and self.wallet>=4 and self.atk_upg_condition:
+            return Action.UPGRADE_ATTACK
+        elif enemy_present and self.wallet>=4 and self.location in self.map.fogs:
+            return Action.RANGED_ATTACK
 
         return -1
 
@@ -360,15 +352,15 @@ class GameState:
         self.map.adjmatrix[self.location].sort(key=lambda adj: self.get_merit(adj))
         
         # Logs
-        self.log('round', f'{str(self.current_round)}/{str(self.rounds)}')
-        self.log('location', str(self.location))
-        self.log('Map', str(self.map))
+        # self.log('round', f'{str(self.current_round)}/{str(self.rounds)}')
+        # self.log('location', str(self.location))
+        # self.log('Map', str(self.map))
         # self.log('wallet', str(self.wallet))
         # self.log('adjmatrix', str(self.map.adjmatrix[self.location]))
         # self.log('worthy', self.select_worthy())
-        self.log('Last Action', str(self.last_action))
-        self.log('mins', str(self.map.mines))
-        self.log('fogs', str(self.map.fogs))
+        # self.log('Last Action', str(self.last_action))
+        # self.log('mins', str(self.map.mines))
+        # self.log('fogs', str(self.map.fogs))
 
         # Guidance
         '''go to treasurys --> return self.move(self.go_treasury())'''
@@ -381,8 +373,6 @@ class GameState:
         remaining_rounds = self.rounds - self.current_round
         max_value_in_wallet = min(self.max_value_in_wallet,remaining_rounds//5)
         min_value_in_wallet = max(self.min_value_in_wallet,max_value_in_wallet-5)
-        # self.log("Min Val",min_value_in_wallet)
-        # self.log("Max Val",max_value_in_wallet)
         
         self.atk_upg_condition = remaining_rounds>=30 and self.atk_upgrade_cost<=4 and self.wallet>= self.atk_upgrade_cost and self.atklvl<4
         self.def_upg_condition = remaining_rounds>=40 and self.def_upgrade_cost<=4 and self.wallet>= self.def_upgrade_cost and self.deflvl<3
