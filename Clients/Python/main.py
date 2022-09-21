@@ -388,7 +388,12 @@ class GameState:
             else:                                                       return self.move(self.go_worthy(self.select_worthy()))
 
         elif self.wallet >= min_value_in_wallet:
-            if len(self.map.golds):                 return self.move(self.get_golds())
+            if len(self.map.golds):
+                if len(self.map.treasury):
+                    if self.distance(self.location, self.map.treasury[0]) <= self.distance(self.location, self.map.golds[0]):
+                        if self.wallet >= 3:
+                            return self.move(self.go_treasury())
+                return self.move(self.get_golds())
             elif len(self.map.treasury):            return self.move(self.go_treasury())
             else:                                   return self.move(self.go_worthy(self.select_worthy()))
 
